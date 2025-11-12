@@ -1,0 +1,68 @@
+package dev.chsr.stonevault.activity
+
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
+import dev.chsr.stonevault.component.BottomNavigationBar
+import dev.chsr.stonevault.database.AppDatabase
+import dev.chsr.stonevault.screen.NewPasswordScreen
+import dev.chsr.stonevault.screen.PasswordListScreen
+import dev.chsr.stonevault.screen.SettingsScreen
+import dev.chsr.stonevault.ui.theme.StoneVaultTheme
+import dev.chsr.stonevault.viewmodel.CredentialViewModel
+import javax.crypto.spec.SecretKeySpec
+
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "database"
+        ).build()
+
+        val secretKeyBytes = intent.getByteArrayExtra("SECRET_KEY")
+        val secretKey = SecretKeySpec(secretKeyBytes, "AES")
+
+        val credentialViewModel: CredentialViewModel by viewModels {
+            CredentialViewModel.CredentialViewModelFactory(db, secretKey)
+        }
+
+        credentialViewModel.clear()
+
+        setContent {
+            StoneVaultTheme {
+                val navController = rememberNavController()
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        BottomNavigationBar(navController)
+                    }) { innerPadding ->
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = "passwordList",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("passwordList") { PasswordListScreen(credentialViewModel) }
+                        composable("newPassword") { NewPasswordScreen(credentialViewModel) }
+                        composable("settings") { SettingsScreen() }
+                    }
+                }
+            }
+        }
+    }
+}
