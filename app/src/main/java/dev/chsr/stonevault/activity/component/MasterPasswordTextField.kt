@@ -1,13 +1,8 @@
 package dev.chsr.stonevault.activity.component
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
@@ -17,41 +12,47 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import dev.chsr.stonevault.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun MasterPasswordTextField(
     isWrongPasswordInput: MutableState<Boolean>,
-    masterPasswordValue: MutableState<String>
+    masterPasswordValue: MutableState<String>,
+    fieldLabel: String
 ) {
-    val textFieldTransition = rememberInfiniteTransition(label = "shake")
-    val offsetX by textFieldTransition.animateFloat(
-        initialValue = -6f,
-        targetValue = 6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 500,
-                easing = LinearEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "offsetX"
-    )
     val animatedContentMasterPasswordColor by animateColorAsState(
-        targetValue = if (isWrongPasswordInput) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
+        targetValue = if (isWrongPasswordInput.value) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
         animationSpec = tween(
             durationMillis = 500,
             easing = androidx.compose.animation.core.FastOutSlowInEasing
         ),
         label = "color_animation_content"
     )
+    val scope = rememberCoroutineScope()
+    val offsetX = remember { Animatable(0f) }
+
+    if (isWrongPasswordInput.value) {
+        scope.launch {
+            offsetX.stop()
+            offsetX.snapTo(0F)
+            repeat(2) {
+                offsetX.animateTo(-8f, tween(60))
+                offsetX.animateTo(8f, tween(60))
+            }
+            offsetX.animateTo(0f, tween(80))
+            isWrongPasswordInput.value = false
+        }
+    }
 
     OutlinedTextField(
         modifier = Modifier.graphicsLayer {
-            translationX = if (isWrongPasswordInput.value) offsetX else 0f
+            translationX = offsetX.value
         },
         leadingIcon = {
             Icon(
@@ -60,13 +61,8 @@ fun MasterPasswordTextField(
                 tint = animatedContentMasterPasswordColor
             )
         },
-        label = {
-            Text(
-                text = stringResource(R.string.enter_master_password),
-                color = animatedContentMasterPasswordColor
-            )
-        },
-        value = masterPasswordValue,
+        label = { Text(fieldLabel) },
+        value = masterPasswordValue.value,
         onValueChange = {
             masterPasswordValue.value = it
             isWrongPasswordInput.value = false

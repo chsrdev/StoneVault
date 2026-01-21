@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -34,6 +35,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +51,7 @@ import dev.chsr.stonevault.R
 import dev.chsr.stonevault.activity.component.MasterPasswordTextField
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.viewmodel.AppViewModel
+import kotlinx.coroutines.launch
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.getValue
@@ -65,8 +68,8 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             StoneVaultTheme {
-                var masterPasswordValue by remember { mutableStateOf("") }
-                var isWrongPasswordInput by remember { mutableStateOf(false) }
+                val masterPasswordValue = remember { mutableStateOf("") }
+                val isWrongPasswordInput = remember { mutableStateOf(false) }
                 val haptic = LocalHapticFeedback.current
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -78,13 +81,17 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
                         contentAlignment = Alignment.Center
                     ) {
                         Column(modifier = Modifier.imePadding()) {
-                            MasterPasswordTextField(isWrongPasswordInput, masterPasswordValue)
+                            MasterPasswordTextField(
+                                isWrongPasswordInput,
+                                masterPasswordValue,
+                                stringResource(R.string.enter_master_password)
+                            )
                             Button(
                                 modifier = Modifier
                                     .padding(top = 32.dp)
                                     .align(Alignment.CenterHorizontally),
                                 onClick = {
-                                    if (verifyMasterPassword(masterPasswordValue)) {
+                                    if (verifyMasterPassword(masterPasswordValue.value)) {
                                         startActivity(
                                             Intent(
                                                 applicationContext,
@@ -96,7 +103,7 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
                                         finish()
                                     } else {
                                         haptic.performHapticFeedback(HapticFeedbackType.Reject)
-                                        isWrongPasswordInput = true
+                                        isWrongPasswordInput.value = true
                                     }
                                 }) {
                                 Text(stringResource(R.string.done))

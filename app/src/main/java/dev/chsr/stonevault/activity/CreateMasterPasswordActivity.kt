@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lambdapioneer.argon2kt.Argon2Kt
@@ -32,6 +34,7 @@ import com.lambdapioneer.argon2kt.Argon2KtResult
 import com.lambdapioneer.argon2kt.Argon2Mode
 import dev.chsr.stonevault.utils.AES
 import dev.chsr.stonevault.R
+import dev.chsr.stonevault.activity.component.MasterPasswordTextField
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.viewmodel.AppViewModel
 import java.security.SecureRandom
@@ -48,8 +51,10 @@ class CreateMasterPasswordActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             StoneVaultTheme {
-                var masterPasswordValue by remember { mutableStateOf("") }
-                var confirmMasterPasswordValue by remember { mutableStateOf("") }
+                val masterPasswordValue = remember { mutableStateOf("") }
+                val confirmMasterPasswordValue = remember { mutableStateOf("") }
+                val isWrongPasswordInput = remember { mutableStateOf(false) }
+                val haptic = LocalHapticFeedback.current
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(
@@ -60,38 +65,37 @@ class CreateMasterPasswordActivity : AppCompatActivity() {
                         contentAlignment = Alignment.Center
                     ) {
                         Column(modifier = Modifier.imePadding()) {
-                            // todo: add hints for a password (length, symbols, etc.)
-                            OutlinedTextField(
-                                value = masterPasswordValue,
-                                onValueChange = { masterPasswordValue = it },
-                                label = {
-                                    Text(stringResource(R.string.create_master_password))
-                                },
-                                modifier = Modifier.padding(innerPadding)
+                            MasterPasswordTextField(
+                                isWrongPasswordInput,
+                                masterPasswordValue,
+                                stringResource(R.string.create_master_password)
                             )
-                            OutlinedTextField(
-                                value = confirmMasterPasswordValue,
-                                onValueChange = { confirmMasterPasswordValue = it },
-                                label = {
-                                    Text(stringResource(R.string.confirm_master_password))
-                                },
-                                modifier = Modifier.padding(innerPadding)
+                            MasterPasswordTextField(
+                                isWrongPasswordInput,
+                                confirmMasterPasswordValue,
+                                stringResource(R.string.confirm_master_password)
                             )
+
                             Button(
-                                modifier = Modifier.padding(top=32.dp).align(Alignment.CenterHorizontally),
+                                modifier = Modifier
+                                    .padding(top = 32.dp)
+                                    .align(Alignment.CenterHorizontally),
                                 onClick = {
-                                if (masterPasswordValue == confirmMasterPasswordValue && masterPasswordValue.isNotEmpty()) {
-                                    val key = saveFirstEnter(masterPasswordValue)
-                                    startActivity(
-                                        Intent(
-                                            applicationContext,
-                                            MainActivity::class.java
-                                        ).apply {
-                                            putExtra("SECRET_KEY", key.encoded)
-                                        }
-                                    )
-                                } // todo: else highlight text fields
-                            }) {
+                                    if (masterPasswordValue.value == confirmMasterPasswordValue.value && masterPasswordValue.value.isNotEmpty()) {
+                                        val key = saveFirstEnter(masterPasswordValue.value)
+                                        startActivity(
+                                            Intent(
+                                                applicationContext,
+                                                MainActivity::class.java
+                                            ).apply {
+                                                putExtra("SECRET_KEY", key.encoded)
+                                            }
+                                        )
+                                    } else {
+                                        haptic.performHapticFeedback(HapticFeedbackType.Reject)
+                                        isWrongPasswordInput.value = true
+                                    }
+                                }) {
                                 Text(stringResource(R.string.done))
                             }
                         }
