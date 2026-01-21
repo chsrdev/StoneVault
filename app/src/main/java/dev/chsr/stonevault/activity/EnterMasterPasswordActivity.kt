@@ -7,27 +7,46 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.lambdapioneer.argon2kt.Argon2Kt
 import com.lambdapioneer.argon2kt.Argon2KtResult
 import com.lambdapioneer.argon2kt.Argon2Mode
 import dev.chsr.stonevault.utils.AES
 import dev.chsr.stonevault.R
+import dev.chsr.stonevault.activity.component.MasterPasswordTextField
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.viewmodel.AppViewModel
 import javax.crypto.spec.IvParameterSpec
@@ -47,37 +66,40 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
         setContent {
             StoneVaultTheme {
                 var masterPasswordValue by remember { mutableStateOf("") }
+                var isWrongPasswordInput by remember { mutableStateOf(false) }
+                val haptic = LocalHapticFeedback.current
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
+                            .padding(innerPadding)
+                            .background(MaterialTheme.colorScheme.background),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(modifier = Modifier.imePadding()) {
-                            OutlinedTextField(
-                                value = masterPasswordValue,
-                                onValueChange = { masterPasswordValue = it },
-                                label = {
-                                    Text(stringResource(R.string.enter_master_password))
-                                },
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                            Button(onClick = {
-                                if (verifyMasterPassword(masterPasswordValue)) {
-                                    startActivity(
-                                        Intent(
-                                            applicationContext,
-                                            MainActivity::class.java
-                                        ).apply {
-                                            putExtra("SECRET_KEY", secretKey!!.encoded)
-                                        }
-                                    )
-                                    finish()
-                                }
-                            }) {
-                                Text(stringResource(R.string.ok))
+                            MasterPasswordTextField(isWrongPasswordInput, masterPasswordValue)
+                            Button(
+                                modifier = Modifier
+                                    .padding(top = 32.dp)
+                                    .align(Alignment.CenterHorizontally),
+                                onClick = {
+                                    if (verifyMasterPassword(masterPasswordValue)) {
+                                        startActivity(
+                                            Intent(
+                                                applicationContext,
+                                                MainActivity::class.java
+                                            ).apply {
+                                                putExtra("SECRET_KEY", secretKey!!.encoded)
+                                            }
+                                        )
+                                        finish()
+                                    } else {
+                                        haptic.performHapticFeedback(HapticFeedbackType.Reject)
+                                        isWrongPasswordInput = true
+                                    }
+                                }) {
+                                Text(stringResource(R.string.done))
                             }
                         }
                     }

@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -22,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -30,11 +34,26 @@ import dev.chsr.stonevault.entity.DecodedCredential
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
 
 @Composable
-fun NewPasswordScreen(credentialViewModel: CredentialViewModel, navController: NavController) {
-    var title by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+fun PasswordScreen(
+    id: Int?,
+    credentialViewModel: CredentialViewModel,
+    navController: NavController
+) {
+    if (id == -1) {
+        navController.popBackStack()
+        return
+    }
+
+    val decodedCredential = credentialViewModel.getDecodedCredentialById(id!!)
+    if (decodedCredential == null) {
+        navController.popBackStack()
+        return
+    }
+
+    var title by remember { mutableStateOf(decodedCredential.title) }
+    var password by remember { mutableStateOf(decodedCredential.password) }
+    var email by remember { mutableStateOf(decodedCredential.email) }
+    var notes by remember { mutableStateOf(decodedCredential.notes) }
 
     Box(
         modifier = Modifier
@@ -53,36 +72,36 @@ fun NewPasswordScreen(credentialViewModel: CredentialViewModel, navController: N
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
                         value = title,
                         onValueChange = { title = it },
                         label = {
                             Text(stringResource(R.string.title))
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
                         value = email,
                         onValueChange = { email = it },
                         label = {
                             Text(stringResource(R.string.email))
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
                         value = password,
                         onValueChange = { password = it },
                         label = {
                             Text(stringResource(R.string.password))
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
                         value = notes,
                         onValueChange = { notes = it },
                         label = {
                             Text(stringResource(R.string.notes))
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -98,19 +117,32 @@ fun NewPasswordScreen(credentialViewModel: CredentialViewModel, navController: N
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             if (title.isNotEmpty()) {
-                                credentialViewModel.addCredential(
+                                credentialViewModel.updateCredential(
                                     DecodedCredential(
-                                        title = title.trim(),
-                                        password = password.trim(),
-                                        email = email.trim(),
-                                        notes = notes.trim()
+                                        id = id,
+                                        title = title,
+                                        email = email,
+                                        password = password,
+                                        notes = notes
                                     )
                                 )
-                                navController.navigate(Screen.PasswordList.route)
-                            } // todo: else highlight
-                        },
+                                navController.popBackStack()
+                            }
+                        }
                     ) {
-                        Text(stringResource(R.string.done))
+                        Text(stringResource(R.string.save))
+                    }
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White
+                        ),
+                        onClick = {
+                            credentialViewModel.deleteCredential(id)
+                            navController.popBackStack()
+                        }
+                    ) {
+                        Text(stringResource(R.string.delete))
                     }
                 }
             }

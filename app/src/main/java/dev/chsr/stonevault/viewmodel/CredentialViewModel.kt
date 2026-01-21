@@ -34,7 +34,7 @@ class CredentialViewModel(private val db: AppDatabase, val secretKey: SecretKeyS
         return credentials.value.first { it.id == id }
     }
 
-    fun getDecodedCredential(id: Int): DecodedCredential? {
+    fun getDecodedCredentialById(id: Int): DecodedCredential? {
         val credential = getCredentialById(id) ?: return null
         return DecodedCredential(
             credential.id,
@@ -44,7 +44,6 @@ class CredentialViewModel(private val db: AppDatabase, val secretKey: SecretKeyS
             decode(credential.notes, Base64.decode(credential.notesIv, Base64.NO_WRAP))
         )
     }
-
 
     fun updateCredential(decodedCredential: DecodedCredential) {
         if (decodedCredential.id == null)
@@ -101,6 +100,12 @@ class CredentialViewModel(private val db: AppDatabase, val secretKey: SecretKeyS
         )
     }
 
+    fun deleteCredential(id: Int) {
+        viewModelScope.launch {
+            credentialDao.delete(id)
+        }
+    }
+
     fun clear() {
         viewModelScope.launch {
             credentialDao.clear()
@@ -112,7 +117,7 @@ class CredentialViewModel(private val db: AppDatabase, val secretKey: SecretKeyS
     private fun decode(text: String, iv: ByteArray): String =
         AES.decode(text, secretKey, IvParameterSpec(iv))
     private fun encode(text: String, iv: String): String =
-        AES.encode(text, secretKey, IvParameterSpec(iv.toByteArray()))
+        AES.encode(text, secretKey, IvParameterSpec(Base64.decode(iv, Base64.NO_WRAP)))
 
     class CredentialViewModelFactory(
         private val db: AppDatabase,
