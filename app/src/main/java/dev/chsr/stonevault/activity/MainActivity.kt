@@ -20,7 +20,6 @@ import androidx.room.Room
 import dev.chsr.stonevault.activity.component.BottomNavigationBar
 import dev.chsr.stonevault.database.AppDatabase
 import dev.chsr.stonevault.screen.PasswordListScreen
-import dev.chsr.stonevault.screen.PasswordScreen
 import dev.chsr.stonevault.screen.Screen
 import dev.chsr.stonevault.screen.SettingsScreen
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
@@ -54,7 +53,9 @@ class MainActivity : AppCompatActivity() {
                 val navController = rememberNavController()
 
                 Scaffold(
-                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
                     bottomBar = {
                         BottomNavigationBar(navController)
                     }) { innerPadding ->
@@ -71,18 +72,6 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
                         composable(Screen.Settings.route) { SettingsScreen(localizationViewModel) }
-                        composable(
-                            route = "${Screen.Password.route}/{id}",
-                            arguments = listOf(
-                                navArgument("id") {
-                                    type = NavType.IntType
-                                    defaultValue = -1
-                                }
-                            )
-                        ) { backStackEntry ->
-                            val id = backStackEntry.arguments?.getInt("id") ?: 0
-                            PasswordScreen(id, credentialViewModel, navController)
-                        }
                     }
                 }
             }

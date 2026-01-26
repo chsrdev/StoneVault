@@ -27,4 +27,10 @@
     <string name="delete_all_passwords">Delete all passwords</string>
     <string name="lock_icon">Lock icon</string>
     <string name="add_new_password_icon">Add new password icon</string>
+    <string name="save_password_icon">Save password icon</string>
+    <string name="password_email_icon">Password email icon</string>
+    <string name="password_notes_icon">Password notes icon</string>
+    <string name="password_icon">Password icon</string>
+    <string name="password_title_icon">Password title icon</string>
+    <string name="delete_password_icon">Delete password icon</string>
 </resources>

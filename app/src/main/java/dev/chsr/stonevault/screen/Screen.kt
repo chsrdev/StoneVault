@@ -5,5 +5,4 @@ enum class Screen(
 ) {
     PasswordList("passwordList"),
     Settings("settings"),
-    Password("password")
 }

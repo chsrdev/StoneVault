@@ -1,52 +1,65 @@
-package dev.chsr.stonevault.screen
+package dev.chsr.stonevault.screen.component
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.entity.DecodedCredential
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PasswordScreen(
-    id: Int?,
+fun EditPasswordBottomSheet(
+    id: Int,
     credentialViewModel: CredentialViewModel,
-    navController: NavController
+    showEditPasswordBottomSheet: MutableState<Boolean>
 ) {
     if (id == -1) {
-        navController.popBackStack()
+        showEditPasswordBottomSheet.value = false
         return
     }
 
     val decodedCredential = credentialViewModel.getDecodedCredentialById(id!!)
     if (decodedCredential == null) {
-        navController.popBackStack()
+        showEditPasswordBottomSheet.value = false
         return
     }
 
@@ -55,13 +68,29 @@ fun PasswordScreen(
     var email by remember { mutableStateOf(decodedCredential.email) }
     var notes by remember { mutableStateOf(decodedCredential.notes) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
+    var isWrongTitle by remember { mutableStateOf(false) }
+    val animatedTitleColor by animateColorAsState(
+        targetValue = if (isWrongTitle) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
+        animationSpec = tween(
+            durationMillis = 500,
+            easing = FastOutSlowInEasing
+        ),
+        label = "color_animation_title"
+    )
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = {
+            showEditPasswordBottomSheet.value = false
+        },
+        sheetState = sheetState
     ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
+                .padding(16.dp)
         ) {
             item {
                 Column(
@@ -77,7 +106,14 @@ fun PasswordScreen(
                         label = {
                             Text(stringResource(R.string.title))
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.AccountBox,
+                                contentDescription = stringResource(R.string.password_title_icon),
+                                tint = animatedTitleColor
+                            )
+                        }
                     )
                     OutlinedTextField(
                         value = email,
@@ -85,7 +121,13 @@ fun PasswordScreen(
                         label = {
                             Text(stringResource(R.string.email))
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = stringResource(R.string.password_email_icon)
+                            )
+                        }
                     )
                     OutlinedTextField(
                         value = password,
@@ -93,7 +135,13 @@ fun PasswordScreen(
                         label = {
                             Text(stringResource(R.string.password))
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = stringResource(R.string.password_icon),
+                            )
+                        }
                     )
                     OutlinedTextField(
                         value = notes,
@@ -101,21 +149,31 @@ fun PasswordScreen(
                         label = {
                             Text(stringResource(R.string.notes))
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.password_notes_icon)
+                            )
+                        }
                     )
                 }
-
-                Column(
+            }
+            item {
+                Box(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(16.dp)
                 ) {
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        DeletePasswordFab {
+                            credentialViewModel.deleteCredential(id)
+                            showEditPasswordBottomSheet.value = false
+                        }
+                        SavePasswordFab {
                             if (title.isNotEmpty()) {
                                 credentialViewModel.updateCredential(
                                     DecodedCredential(
@@ -126,23 +184,11 @@ fun PasswordScreen(
                                         notes = notes
                                     )
                                 )
-                                navController.popBackStack()
+                                showEditPasswordBottomSheet.value = false
+                            } else {
+                                isWrongTitle = true
                             }
                         }
-                    ) {
-                        Text(stringResource(R.string.save))
-                    }
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            contentColor = Color.White
-                        ),
-                        onClick = {
-                            credentialViewModel.deleteCredential(id)
-                            navController.popBackStack()
-                        }
-                    ) {
-                        Text(stringResource(R.string.delete))
                     }
                 }
             }

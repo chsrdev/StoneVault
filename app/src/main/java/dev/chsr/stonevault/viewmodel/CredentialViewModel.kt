@@ -77,6 +77,7 @@ class CredentialViewModel(private val db: AppDatabase, val secretKey: SecretKeyS
     fun addCredential(credential: Credential) {
         viewModelScope.launch {
             credentialDao.insertAll(credential)
+            loadCredentials()
         }
     }
 
@@ -103,12 +104,14 @@ class CredentialViewModel(private val db: AppDatabase, val secretKey: SecretKeyS
     fun deleteCredential(id: Int) {
         viewModelScope.launch {
             credentialDao.delete(id)
+            loadCredentials()
         }
     }
 
     fun clear() {
         viewModelScope.launch {
             credentialDao.clear()
+            loadCredentials()
         }
     }
 
