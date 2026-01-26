@@ -33,4 +33,7 @@
     <string name="password_icon">Password icon</string>
     <string name="password_title_icon">Password title icon</string>
     <string name="delete_password_icon">Delete password icon</string>
+    <string name="generate_password_icon">Generate password icon</string>
+    <string name="search_icon">Search icon</string>
+    <string name="search">Search</string>
 </resources>

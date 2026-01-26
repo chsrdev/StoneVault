@@ -28,4 +28,7 @@
     <string name="password_icon">Иконка пароля</string>
     <string name="password_title_icon">Иконка названия</string>
     <string name="delete_password_icon">Иконка удаления</string>
+    <string name="generate_password_icon">Иконка генерирования пароля</string>
+    <string name="search_icon">Иконка поиска</string>
+    <string name="search">Поиск</string>
 </resources>

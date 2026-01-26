@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.entity.DecodedCredential
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
+import java.security.SecureRandom
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,27 +147,51 @@ fun NewPasswordBottomSheet(
             }
             item {
                 Box(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
-                    SavePasswordFab(
-                        modifier = Modifier.align(Alignment.BottomEnd)
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        if (title.isNotEmpty()) {
-                            credentialViewModel.addCredential(
-                                DecodedCredential(
-                                    title = title.trim(),
-                                    password = password.trim(),
-                                    email = email.trim(),
-                                    notes = notes.trim()
+                        GeneratePasswordFab {
+                            password = generatePassword()
+                        }
+                        SavePasswordFab {
+                            if (title.isNotEmpty()) {
+                                credentialViewModel.addCredential(
+                                    DecodedCredential(
+                                        title = title.trim(),
+                                        password = password.trim(),
+                                        email = email.trim(),
+                                        notes = notes.trim()
+                                    )
                                 )
-                            )
-                            showNewPasswordBottomSheet.value = false
-                        } else {
-                            isWrongTitle = true
+                                showNewPasswordBottomSheet.value = false
+                            } else {
+                                isWrongTitle = true
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+private val secureRandom = SecureRandom()
+
+fun randomChar(): Char {
+    val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#\$%^&*()-_=+[]{}"
+    return chars[secureRandom.nextInt(chars.length)]
+}
+
+fun generatePassword(): String {
+    val length = 15
+    var pwd = ""
+    repeat (length) {
+        pwd += randomChar()
+    }
+    return pwd
 }
