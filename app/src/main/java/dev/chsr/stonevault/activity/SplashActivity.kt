@@ -6,9 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
+import dev.chsr.stonevault.utils.PreferencesManager
 import dev.chsr.stonevault.viewmodel.AppViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class SplashActivity : ComponentActivity() {
     val viewModel: AppViewModel by viewModels {

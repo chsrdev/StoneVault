@@ -49,9 +49,12 @@ import com.lambdapioneer.argon2kt.Argon2Mode
 import dev.chsr.stonevault.utils.AES
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.activity.component.MasterPasswordTextField
+import dev.chsr.stonevault.screen.updateLocale
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
+import dev.chsr.stonevault.utils.PreferencesManager
 import dev.chsr.stonevault.viewmodel.AppViewModel
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.getValue
@@ -65,6 +68,11 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val preferencesManager = PreferencesManager(applicationContext)
+        val savedCode = preferencesManager.readString("language", Locale.getDefault().language)
+        updateLocale(savedCode)
+
         enableEdgeToEdge()
         setContent {
             StoneVaultTheme {

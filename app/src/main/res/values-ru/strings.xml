@@ -8,7 +8,7 @@
     <string name="title">Название</string>
     <string name="password">Пароль</string>
     <string name="email">Почта</string>
-    <string name="notes">Записи</string>
+    <string name="notes">Заметки</string>
     <string name="settings">Настройки</string>
     <string name="passwords">Пароли</string>
     <string name="add">Добавить</string>
@@ -20,4 +20,12 @@
     <string name="english">Английский</string>
     <string name="russian">Русский</string>
     <string name="delete_all_passwords">Удалить все пароли</string>
+    <string name="lock_icon">Иконка замка</string>
+    <string name="add_new_password_icon">Иконка добавления пароля</string>
+    <string name="save_password_icon">Иконка сохранения пароля</string>
+    <string name="password_email_icon">Иконка почты</string>
+    <string name="password_notes_icon">Иконка заметок</string>
+    <string name="password_icon">Иконка пароля</string>
+    <string name="password_title_icon">Иконка названия</string>
+    <string name="delete_password_icon">Иконка удаления</string>
 </resources>
