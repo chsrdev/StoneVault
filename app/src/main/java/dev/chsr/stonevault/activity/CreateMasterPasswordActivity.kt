@@ -53,7 +53,7 @@ class CreateMasterPasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val preferencesManager = PreferencesManager(applicationContext)
-          val savedCode = preferencesManager.readString("language", Locale.getDefault().language)
+        val savedCode = preferencesManager.readString("language", Locale.getDefault().language)
         updateLocale(savedCode)
 
         enableEdgeToEdge()

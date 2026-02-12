@@ -5,12 +5,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -23,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -30,7 +27,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +66,9 @@ fun NewPasswordBottomSheet(
         onDismissRequest = {
             showNewPasswordBottomSheet.value = false
         },
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         LazyColumn(
             modifier = Modifier
@@ -93,6 +91,12 @@ fun NewPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.title))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.AccountBox,
@@ -108,10 +112,17 @@ fun NewPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.email))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
-                                contentDescription = stringResource(R.string.password_email_icon)
+                                contentDescription = stringResource(R.string.password_email_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     )
@@ -122,10 +133,17 @@ fun NewPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.password))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = stringResource(R.string.password_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     )
@@ -136,10 +154,17 @@ fun NewPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.notes))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.password_notes_icon)
+                                contentDescription = stringResource(R.string.password_notes_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     )

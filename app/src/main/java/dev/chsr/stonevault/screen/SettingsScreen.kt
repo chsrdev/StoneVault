@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,7 +70,11 @@ fun SettingsScreen(localizationViewModel: LocalizationViewModel) {
         verticalArrangement = Arrangement.Top
     ) {
         item {
-            Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Card(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = stringResource(R.string.language))
                     Spacer(modifier = Modifier.height(16.dp))
@@ -99,6 +105,40 @@ fun SettingsScreen(localizationViewModel: LocalizationViewModel) {
                     }
                 }
             }
+        }
+        item {
+//            Card(modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(16.dp)) {
+//                Column(modifier = Modifier.padding(16.dp)) {
+//                    Text(text = stringResource(R.string.theme))
+//                    Spacer(modifier = Modifier.height(16.dp))
+//
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(vertical = 8.dp)
+//                            .clickable {
+//                                activity?.let {
+//                                    localizationViewModel.(, it)
+//                                }
+//                            }
+//                    ) {
+//                            RadioButton(
+//                                selected = selectedLanguage.value == lang,
+//                                onClick = {
+//                                    activity?.let {
+//                                        localizationViewModel.setLanguage(lang, it)
+//                                    }
+//                                }
+//                            )
+//                            Spacer(modifier = Modifier.width(8.dp))
+//                            Text(text = stringResource(lang.stringId))
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 }

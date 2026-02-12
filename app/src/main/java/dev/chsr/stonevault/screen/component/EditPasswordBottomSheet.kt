@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -86,7 +87,9 @@ fun EditPasswordBottomSheet(
         onDismissRequest = {
             showEditPasswordBottomSheet.value = false
         },
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         LazyColumn(
             modifier = Modifier
@@ -106,6 +109,12 @@ fun EditPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.title))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
@@ -121,11 +130,18 @@ fun EditPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.email))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
-                                contentDescription = stringResource(R.string.password_email_icon)
+                                contentDescription = stringResource(R.string.password_email_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     )
@@ -135,11 +151,18 @@ fun EditPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.password))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = stringResource(R.string.password_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     )
@@ -149,11 +172,18 @@ fun EditPasswordBottomSheet(
                         label = {
                             Text(stringResource(R.string.notes))
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.password_notes_icon)
+                                contentDescription = stringResource(R.string.password_notes_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     )

@@ -34,8 +34,8 @@ fun BottomNavigationBar(navController: NavController) {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
         items.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.title) },
-                label = { Text(item.title) },
+                icon = { Icon(item.icon, contentDescription = item.title, tint = MaterialTheme.colorScheme.onBackground) },
+                label = { Text(item.title, color = MaterialTheme.colorScheme.onBackground) },
                 selected = currentRoute == item.route,
                 onClick = {
                     if (currentRoute != item.route) {
