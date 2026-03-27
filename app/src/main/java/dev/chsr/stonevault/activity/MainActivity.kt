@@ -6,10 +6,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,6 +30,8 @@ import dev.chsr.stonevault.screen.SettingsScreen
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
 import dev.chsr.stonevault.viewmodel.LocalizationViewModel
+import dev.chsr.stonevault.viewmodel.theme.ThemeMode
+import dev.chsr.stonevault.viewmodel.theme.ThemeViewModel
 import javax.crypto.spec.SecretKeySpec
 
 
@@ -47,33 +54,59 @@ class MainActivity : AppCompatActivity() {
         val localizationViewModel: LocalizationViewModel by viewModels {
             LocalizationViewModel.LocalizationViewModelFactory(application)
         }
+        val themeViewModel: ThemeViewModel by viewModels {
+            ThemeViewModel.ThemeViewModelFactory(application)
+        }
 
         setContent {
-            StoneVaultTheme {
-                val navController = rememberNavController()
-
-                Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    bottomBar = {
-                        BottomNavigationBar(navController)
-                    }) { innerPadding ->
-
-                    NavHost(
-                        navController = navController,
-                        startDestination = Screen.PasswordList.route,
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable(Screen.PasswordList.route) {
-                            PasswordListScreen(
-                                credentialViewModel,
-                                navController
-                            )
-                        }
-                        composable(Screen.Settings.route) { SettingsScreen(localizationViewModel) }
-                    }
+            val currentTheme by themeViewModel.currentTheme.collectAsState()
+            val isDarkTheme = when (currentTheme) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            StoneVaultTheme(darkTheme = isDarkTheme) {
+                key(isDarkTheme) {
+                    AppContent(
+                        credentialViewModel = credentialViewModel,
+                        localizationViewModel = localizationViewModel,
+                        themeViewModel = themeViewModel
+                    )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppContent(
+    credentialViewModel: CredentialViewModel,
+    localizationViewModel: LocalizationViewModel,
+    themeViewModel: ThemeViewModel
+) {
+    val navController = rememberNavController()
+
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        bottomBar = {
+            BottomNavigationBar(navController)
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.PasswordList.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.PasswordList.route) {
+                PasswordListScreen(
+                    credentialViewModel,
+                    navController
+                )
+            }
+            composable(Screen.Settings.route) {
+                SettingsScreen(localizationViewModel, themeViewModel)
             }
         }
     }

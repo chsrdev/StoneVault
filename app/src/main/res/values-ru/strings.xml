@@ -29,6 +29,26 @@
     <string name="password_title_icon">Иконка названия</string>
     <string name="delete_password_icon">Иконка удаления</string>
     <string name="generate_password_icon">Иконка генерирования пароля</string>
-    <string name="search_icon">Иконка поиска</string>
-    <string name="search">Поиск</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Тёмная</string>
+    <string name="theme">Тема</string>
+    <string name="system">Системная</string>
+    <string name="sure_delete_entry">Вы уверены, что хотите удалить эту запись?</string>
+    <string name="cancel">Отмена</string>
+
+    <string name="password_label_weak">Слабый пароль</string>
+    <string name="password_label_medium">Средний пароль</string>
+    <string name="password_label_strong">Надёжный пароль</string>
+
+    <string name="password_reused_one_entry">Этот пароль уже используется в другой записи.</string>
+    <string name="password_reused_multiple_entries">Этот пароль уже используется ещё в %1$d записях.</string>
+
+    <string name="password_recommendation_length">Используйте пароль длиной не менее 8–12 символов.</string>
+    <string name="password_recommendation_lowercase">Добавьте строчные буквы.</string>
+    <string name="password_recommendation_uppercase">Добавьте заглавные буквы.</string>
+    <string name="password_recommendation_digit">Добавьте хотя бы одну цифру.</string>
+    <string name="password_recommendation_special">Добавьте специальный символ.</string>
+    <string name="password_recommendation_common_pattern">Не используйте очевидные шаблоны вроде 123456, qwerty или password.</string>
+    <string name="password_recommendation_low_unique_chars">Используйте больше уникальных символов.</string>
+    <string name="password_recommendation_reused">Не используйте пароли повторно в других записях.</string>
 </resources>

@@ -16,6 +16,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +55,8 @@ import dev.chsr.stonevault.screen.updateLocale
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.utils.PreferencesManager
 import dev.chsr.stonevault.viewmodel.AppViewModel
+import dev.chsr.stonevault.viewmodel.theme.ThemeMode
+import dev.chsr.stonevault.viewmodel.theme.ThemeViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.crypto.spec.IvParameterSpec
@@ -71,11 +75,20 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
 
         val preferencesManager = PreferencesManager(applicationContext)
         val savedCode = preferencesManager.readString("language", Locale.getDefault().language)
+        val themeViewModel: ThemeViewModel by viewModels {
+            ThemeViewModel.ThemeViewModelFactory(application)
+        }
         updateLocale(savedCode)
 
         enableEdgeToEdge()
         setContent {
-            StoneVaultTheme {
+            val currentTheme by themeViewModel.currentTheme.collectAsState()
+            val isDarkTheme = when (currentTheme) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            StoneVaultTheme(darkTheme = isDarkTheme) {
                 val masterPasswordValue = remember { mutableStateOf("") }
                 val isWrongPasswordInput = remember { mutableStateOf(false) }
                 val haptic = LocalHapticFeedback.current

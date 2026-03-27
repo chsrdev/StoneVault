@@ -37,4 +37,25 @@
     <string name="search_icon">Search icon</string>
     <string name="search">Search</string>
     <string name="theme">Theme</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="system">System</string>
+    <string name="sure_delete_entry">Are you sure you want to delete this entry?</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="password_label_weak">Weak password</string>
+    <string name="password_label_medium">Medium password</string>
+    <string name="password_label_strong">Strong password</string>
+
+    <string name="password_reused_one_entry">This password is already used in another entry.</string>
+    <string name="password_reused_multiple_entries">This password is already used in %1$d other entries.</string>
+
+    <string name="password_recommendation_length">Use at least 8–12 characters.</string>
+    <string name="password_recommendation_lowercase">Add lowercase letters.</string>
+    <string name="password_recommendation_uppercase">Add uppercase letters.</string>
+    <string name="password_recommendation_digit">Add at least one digit.</string>
+    <string name="password_recommendation_special">Add a special character.</string>
+    <string name="password_recommendation_common_pattern">Do not use obvious patterns like 123456, qwerty, or password.</string>
+    <string name="password_recommendation_low_unique_chars">Use more unique characters.</string>
+    <string name="password_recommendation_reused">Do not reuse passwords from other entries.</string>
 </resources>

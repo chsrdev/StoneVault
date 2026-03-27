@@ -3,16 +3,11 @@ package dev.chsr.stonevault.screen.component
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -20,8 +15,7 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,22 +23,27 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.entity.DecodedCredential
+import dev.chsr.stonevault.security.PasswordStrength
+import dev.chsr.stonevault.security.analyzePassword
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,26 +57,78 @@ fun EditPasswordBottomSheet(
         return
     }
 
-    val decodedCredential = credentialViewModel.getDecodedCredentialById(id!!)
+    val decodedCredential = credentialViewModel.getDecodedCredentialById(id)
     if (decodedCredential == null) {
         showEditPasswordBottomSheet.value = false
         return
     }
 
+    val credentials by credentialViewModel.credentials.collectAsState()
+
     var title by remember { mutableStateOf(decodedCredential.title) }
     var password by remember { mutableStateOf(decodedCredential.password) }
     var email by remember { mutableStateOf(decodedCredential.email) }
     var notes by remember { mutableStateOf(decodedCredential.notes) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     var isWrongTitle by remember { mutableStateOf(false) }
+
     val animatedTitleColor by animateColorAsState(
-        targetValue = if (isWrongTitle) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
+        targetValue = if (isWrongTitle) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        },
         animationSpec = tween(
             durationMillis = 500,
             easing = FastOutSlowInEasing
         ),
         label = "color_animation_title"
     )
+
+    val allPasswords = credentials.mapNotNull { credential ->
+        val decoded = credentialViewModel.getDecodedCredentialById(credential.id)
+        decoded?.let { credential.id to it.password }
+    }
+
+    val passwordAnalysis = remember(password, allPasswords, id) {
+        analyzePassword(
+            password = password,
+            currentId = id,
+            allPasswords = allPasswords
+        )
+    }
+
+    val passwordBorderTargetColor = when (passwordAnalysis.strength) {
+        PasswordStrength.WEAK -> MaterialTheme.colorScheme.error
+        PasswordStrength.MEDIUM -> Color(0xFFFFC107)
+        PasswordStrength.STRONG -> Color(0xFF4CAF50)
+    }
+
+    val animatedPasswordBorderColor by animateColorAsState(
+        targetValue = passwordBorderTargetColor,
+        animationSpec = tween(
+            durationMillis = 400,
+            easing = FastOutSlowInEasing
+        ),
+        label = "password_border_animation"
+    )
+
+    val passwordLabelRes = when (passwordAnalysis.strength) {
+        PasswordStrength.WEAK -> R.string.password_label_weak
+        PasswordStrength.MEDIUM -> R.string.password_label_medium
+        PasswordStrength.STRONG -> R.string.password_label_strong
+    }
+
+    val reusedMessage = when {
+        passwordAnalysis.reusedCount > 1 -> stringResource(
+            R.string.password_reused_multiple_entries,
+            passwordAnalysis.reusedCount
+        )
+
+        passwordAnalysis.isReused -> stringResource(R.string.password_reused_one_entry)
+        else -> null
+    }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -92,8 +143,7 @@ fun EditPasswordBottomSheet(
         contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         LazyColumn(
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             item {
                 Column(
@@ -105,7 +155,10 @@ fun EditPasswordBottomSheet(
                 ) {
                     OutlinedTextField(
                         value = title,
-                        onValueChange = { title = it },
+                        onValueChange = {
+                            title = it
+                            if (it.isNotEmpty()) isWrongTitle = false
+                        },
                         label = {
                             Text(stringResource(R.string.title))
                         },
@@ -124,6 +177,7 @@ fun EditPasswordBottomSheet(
                             )
                         }
                     )
+
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
@@ -149,46 +203,76 @@ fun EditPasswordBottomSheet(
                         value = password,
                         onValueChange = { password = it },
                         label = {
-                            Text(stringResource(R.string.password))
+                            Text(stringResource(passwordLabelRes))
+                        },
+                        supportingText = {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                reusedMessage?.let {
+                                    Text(
+                                        text = it,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+
+                                passwordAnalysis.recommendations.take(3).forEach { recommendationRes ->
+                                    Text(
+                                        text = stringResource(recommendationRes),
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+
+                            focusedBorderColor = animatedPasswordBorderColor,
+                            unfocusedBorderColor = animatedPasswordBorderColor,
+
+                            focusedLeadingIconColor = animatedPasswordBorderColor,
+                            unfocusedLeadingIconColor = animatedPasswordBorderColor,
+
+                            focusedLabelColor = animatedPasswordBorderColor,
+                            unfocusedLabelColor = animatedPasswordBorderColor,
+                            cursorColor = animatedPasswordBorderColor
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
-                                contentDescription = stringResource(R.string.password_icon),
-                                tint = MaterialTheme.colorScheme.onBackground
+                                contentDescription = stringResource(R.string.password_icon)
                             )
                         }
                     )
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = {
-                            Text(stringResource(R.string.notes))
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.password_notes_icon),
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    )
+
+                        OutlinedTextField(
+                            value = notes,
+                            onValueChange = { notes = it },
+                            label = {
+                                Text(stringResource(R.string.notes))
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.password_notes_icon),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        )
                 }
             }
+
             item {
                 Box(
                     modifier = Modifier
@@ -200,9 +284,9 @@ fun EditPasswordBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         DeletePasswordFab {
-                            credentialViewModel.deleteCredential(id)
-                            showEditPasswordBottomSheet.value = false
+                            showDeleteDialog = true
                         }
+
                         SavePasswordFab {
                             if (title.isNotEmpty()) {
                                 credentialViewModel.updateCredential(
@@ -223,5 +307,36 @@ fun EditPasswordBottomSheet(
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+            text = {
+                Text(stringResource(R.string.sure_delete_entry))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        credentialViewModel.deleteCredential(id)
+                        showDeleteDialog = false
+                        showEditPasswordBottomSheet.value = false
+                    }
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }

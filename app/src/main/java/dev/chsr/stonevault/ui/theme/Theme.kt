@@ -1,68 +1,73 @@
 package dev.chsr.stonevault.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFAF62BD),
-    onPrimary = Color.White,
+    primary = Color(0xFFD29BE0),
+    onPrimary = Color(0xFF2A0E31),
 
-    secondary = Color(0xFFCE93D8),
+    secondary = Color(0xFFBCA7C8),
+    onSecondary = Color(0xFF231828),
 
-    tertiary = Color(0xFF4FC3F7),
-    onTertiary = Color.White,
+    tertiary = Color(0xFF7DD3FC),
+    onTertiary = Color(0xFF082433),
 
-    background = Color(0xFF101010),
-    surface = Color(0xFF2F2F2F),
+    background = Color(0xFF121014),
+    onBackground = Color(0xFFF3EEF4),
 
-    error = Color(0xFF9F2130),
-    onError = Color.White,
+    surface = Color(0xFF1B181D),
+    onSurface = Color(0xFFF3EEF4),
+
+    surfaceVariant = Color(0xFF2A2430),
+    onSurfaceVariant = Color(0xFFD0C3D5),
+
+    error = Color(0xFFFF6B6B),
+    onError = Color(0xFF3B0A0A),
+
+    primaryContainer = Color(0xFF5D356E),
+    onPrimaryContainer = Color(0xFFF3DDF8),
+
+    outline = Color(0xFF7B7082),
 )
 
-private val LightColorScheme = darkColorScheme(
-    primary = Color(0xFFAF62BD),
+private val LightColorScheme = lightColorScheme(
+    primary = Color(0xFF8E44AD),
     onPrimary = Color.White,
 
-    secondary = Color(0xFFCE93D8),
+    secondary = Color(0xFFB68CC7),
+    onSecondary = Color(0xFF2F1B3A),
 
-    tertiary = Color(0xFF4FC3F7),
+    tertiary = Color(0xFF4DA8DA),
     onTertiary = Color.White,
 
-    background = Color.White,
-    onBackground = Color.Black,
+    background = Color(0xFFFAF7FC),
+    onBackground = Color(0xFF1C1A1F),
 
-    surface = Color(0xFFE2E2E2),
-    onSurface = Color(0xFF101010),
+    surface = Color(0xFFF3EDF7),
+    onSurface = Color(0xFF1C1A1F),
 
-    error = Color(0xFF9F2130),
+    surfaceVariant = Color(0xFFE7DDEA),
+    onSurfaceVariant = Color(0xFF5F5868),
+
+    error = Color(0xFFD32F2F),
     onError = Color.White,
+
+    primaryContainer = Color(0xFFEBDCF2),
+    onPrimaryContainer = Color(0xFF341046),
+
+    outline = Color(0xFF8A7F90),
 )
 @Composable
 fun StoneVaultTheme(
-//    darkTheme: Boolean = isSystemInDarkTheme(),
-    darkTheme: Boolean = false,
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-//            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            if (darkTheme) DarkColorScheme else LightColorScheme
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,

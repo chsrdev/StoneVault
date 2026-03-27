@@ -9,16 +9,27 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,8 +48,11 @@ import dev.chsr.stonevault.R
 import dev.chsr.stonevault.activity.component.MasterPasswordTextField
 import dev.chsr.stonevault.screen.updateLocale
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
+import dev.chsr.stonevault.utils.Languages
 import dev.chsr.stonevault.utils.PreferencesManager
 import dev.chsr.stonevault.viewmodel.AppViewModel
+import dev.chsr.stonevault.viewmodel.theme.ThemeMode
+import dev.chsr.stonevault.viewmodel.theme.ThemeViewModel
 import java.security.SecureRandom
 import java.util.Locale
 import javax.crypto.spec.SecretKeySpec
@@ -54,57 +68,111 @@ class CreateMasterPasswordActivity : AppCompatActivity() {
 
         val preferencesManager = PreferencesManager(applicationContext)
         val savedCode = preferencesManager.readString("language", Locale.getDefault().language)
+        val themeViewModel: ThemeViewModel by viewModels {
+            ThemeViewModel.ThemeViewModelFactory(application)
+        }
         updateLocale(savedCode)
 
         enableEdgeToEdge()
         setContent {
-            StoneVaultTheme {
+            val currentTheme by themeViewModel.currentTheme.collectAsState()
+            val isDarkTheme = when (currentTheme) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            StoneVaultTheme(darkTheme = isDarkTheme) {
                 val masterPasswordValue = remember { mutableStateOf("") }
                 val confirmMasterPasswordValue = remember { mutableStateOf("") }
                 val isWrongPasswordInput = remember { mutableStateOf(false) }
                 val haptic = LocalHapticFeedback.current
+                var languageMenuExpanded by remember { mutableStateOf(false) }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                            .background(MaterialTheme.colorScheme.background),
-                        contentAlignment = Alignment.Center
+                            .background(MaterialTheme.colorScheme.background)
                     ) {
-                        Column(modifier = Modifier.imePadding()) {
-                            MasterPasswordTextField(
-                                isWrongPasswordInput,
-                                masterPasswordValue,
-                                stringResource(R.string.create_master_password)
-                            )
-                            MasterPasswordTextField(
-                                isWrongPasswordInput,
-                                confirmMasterPasswordValue,
-                                stringResource(R.string.confirm_master_password)
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp, end = 12.dp)
+                                .wrapContentSize(Alignment.TopEnd)
+                        ) {
+                            IconButton(
+                                onClick = { languageMenuExpanded = true }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Language,
+                                    contentDescription = stringResource(R.string.language),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
 
-                            Button(
-                                modifier = Modifier
-                                    .padding(top = 32.dp)
-                                    .align(Alignment.CenterHorizontally),
-                                onClick = {
-                                    if (masterPasswordValue.value == confirmMasterPasswordValue.value && masterPasswordValue.value.isNotEmpty()) {
-                                        val key = saveFirstEnter(masterPasswordValue.value)
-                                        startActivity(
-                                            Intent(
-                                                applicationContext,
-                                                MainActivity::class.java
-                                            ).apply {
-                                                putExtra("SECRET_KEY", key.encoded)
-                                            }
-                                        )
-                                    } else {
-                                        haptic.performHapticFeedback(HapticFeedbackType.Reject)
-                                        isWrongPasswordInput.value = true
+                            DropdownMenu(
+                                expanded = languageMenuExpanded,
+                                onDismissRequest = { languageMenuExpanded = false }
+                            ) {
+                                Languages.allLanguages.forEach { lang ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(stringResource(lang.stringId))
+                                        },
+                                        onClick = {
+                                            languageMenuExpanded = false
+                                            val preferencesManager = PreferencesManager(applicationContext)
+                                            preferencesManager.saveString("language", lang.code)
+                                            updateLocale(lang.code)
+                                            recreate()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(modifier = Modifier.imePadding()) {
+                                MasterPasswordTextField(
+                                    isWrongPasswordInput,
+                                    masterPasswordValue,
+                                    stringResource(R.string.create_master_password)
+                                )
+                                MasterPasswordTextField(
+                                    isWrongPasswordInput,
+                                    confirmMasterPasswordValue,
+                                    stringResource(R.string.confirm_master_password)
+                                )
+
+                                Button(
+                                    modifier = Modifier
+                                        .padding(top = 32.dp)
+                                        .align(Alignment.CenterHorizontally),
+                                    onClick = {
+                                        if (masterPasswordValue.value == confirmMasterPasswordValue.value &&
+                                            masterPasswordValue.value.isNotEmpty()
+                                        ) {
+                                            val key = saveFirstEnter(masterPasswordValue.value)
+                                            startActivity(
+                                                Intent(
+                                                    applicationContext,
+                                                    MainActivity::class.java
+                                                ).apply {
+                                                    putExtra("SECRET_KEY", key.encoded)
+                                                }
+                                            )
+                                        } else {
+                                            haptic.performHapticFeedback(HapticFeedbackType.Reject)
+                                            isWrongPasswordInput.value = true
+                                        }
                                     }
-                                }) {
-                                Text(stringResource(R.string.done))
+                                ) {
+                                    Text(stringResource(R.string.done))
+                                }
                             }
                         }
                     }
