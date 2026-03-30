@@ -58,4 +58,15 @@
     <string name="password_recommendation_common_pattern">Do not use obvious patterns like 123456, qwerty, or password.</string>
     <string name="password_recommendation_low_unique_chars">Use more unique characters.</string>
     <string name="password_recommendation_reused">Do not reuse passwords from other entries.</string>
+
+    <string name="easy_to_remember">Easy to remember</string>
+    <string name="password_length">Password length: %d</string>
+    <string name="include_uppercase">Uppercase (A-Z)</string>
+    <string name="include_lowercase">Lowercase (a-z)</string>
+    <string name="include_digits">Digits (0-9)</string>
+    <string name="include_symbols">Symbols (!@#...)</string>
+    <string name="number_of_words">Number of words: %d</string>
+    <string name="generate_button">Generate</string>
+    <string name="are_you_sure_this_action_can_delete_your_current_password">Are you sure? This action can delete your current password.</string>
+    <string name="generate_new_password">Generate new password</string>
 </resources>

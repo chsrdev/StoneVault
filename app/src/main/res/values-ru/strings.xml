@@ -51,4 +51,15 @@
     <string name="password_recommendation_common_pattern">Не используйте очевидные шаблоны вроде 123456, qwerty или password.</string>
     <string name="password_recommendation_low_unique_chars">Используйте больше уникальных символов.</string>
     <string name="password_recommendation_reused">Не используйте пароли повторно в других записях.</string>
+
+    <string name="easy_to_remember">Легко запомнить</string>
+    <string name="password_length">Длина пароля: %d</string>
+    <string name="include_uppercase">Заглавные буквы (A-Z)</string>
+    <string name="include_lowercase">Строчные буквы (a-z)</string>
+    <string name="include_digits">Цифры (0-9)</string>
+    <string name="include_symbols">Спецсимволы (!@#...)</string>
+    <string name="number_of_words">Количество слов: %d</string>
+    <string name="generate_button">Сгенерировать</string>
+    <string name="are_you_sure_this_action_can_delete_your_current_password">Вы уверены? Это действие может удалить ваш текущий пароль.</string>
+    <string name="generate_new_password">Сгенерировать новый пароль</string>
 </resources>

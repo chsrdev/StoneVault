@@ -1,4 +1,4 @@
-package dev.chsr.stonevault.screen.component
+package dev.chsr.stonevault.screen.component.bottomSheet
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +23,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -36,26 +38,47 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chsr.stonevault.security.PasswordStrength
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.entity.DecodedCredential
+import dev.chsr.stonevault.screen.component.fab.DeletePasswordFab
+import dev.chsr.stonevault.screen.component.fab.GeneratePasswordFab
+import dev.chsr.stonevault.screen.component.fab.OpenGeneratePasswordSheetFab
+import dev.chsr.stonevault.screen.component.fab.SavePasswordFab
+import dev.chsr.stonevault.security.PasswordStrength
 import dev.chsr.stonevault.security.analyzePassword
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
+import dev.chsr.stonevault.viewmodel.LocalizationViewModel
 import java.security.SecureRandom
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewPasswordBottomSheet(
+fun EditPasswordBottomSheet(
+    id: Int,
     credentialViewModel: CredentialViewModel,
-    showNewPasswordBottomSheet: MutableState<Boolean>
+    showEditPasswordBottomSheet: MutableState<Boolean>,
+    localizationViewModel: LocalizationViewModel
 ) {
+    if (id == -1) {
+        showEditPasswordBottomSheet.value = false
+        return
+    }
+
+    val decodedCredential = credentialViewModel.getDecodedCredentialById(id)
+    if (decodedCredential == null) {
+        showEditPasswordBottomSheet.value = false
+        return
+    }
+
     val credentials by credentialViewModel.credentials.collectAsState()
 
-    var title by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(decodedCredential.title) }
+    val password = remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(decodedCredential.email) }
+    var notes by remember { mutableStateOf(decodedCredential.notes) }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showGenerateDialog by remember { mutableStateOf(false) }
 
     var isWrongTitle by remember { mutableStateOf(false) }
 
@@ -77,10 +100,10 @@ fun NewPasswordBottomSheet(
         decoded?.let { credential.id to it.password }
     }
 
-    val passwordAnalysis = remember(password, allPasswords) {
+    val passwordAnalysis = remember(password.value, allPasswords, id) {
         analyzePassword(
-            password = password,
-            currentId = -1,
+            password = password.value,
+            currentId = id,
             allPasswords = allPasswords
         )
     }
@@ -111,9 +134,19 @@ fun NewPasswordBottomSheet(
             R.string.password_reused_multiple_entries,
             passwordAnalysis.reusedCount
         )
+
         passwordAnalysis.isReused -> stringResource(R.string.password_reused_one_entry)
         else -> null
     }
+
+    val showGeneratePasswordBottomSheet = remember { mutableStateOf(false) }
+
+    if (showGeneratePasswordBottomSheet.value)
+        GeneratePasswordSheet(
+            password,
+            showGeneratePasswordBottomSheet,
+            localizationViewModel
+        )
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -121,7 +154,7 @@ fun NewPasswordBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = {
-            showNewPasswordBottomSheet.value = false
+            showEditPasswordBottomSheet.value = false
         },
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.background,
@@ -132,16 +165,17 @@ fun NewPasswordBottomSheet(
         ) {
             item {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
                         value = title,
                         onValueChange = {
                             title = it
-                            isWrongTitle = false
+                            if (it.isNotEmpty()) isWrongTitle = false
                         },
                         label = {
                             Text(stringResource(R.string.title))
@@ -152,6 +186,7 @@ fun NewPasswordBottomSheet(
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
                         ),
+                        modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.AccountBox,
@@ -162,7 +197,6 @@ fun NewPasswordBottomSheet(
                     )
 
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
                         value = email,
                         onValueChange = { email = it },
                         label = {
@@ -174,6 +208,7 @@ fun NewPasswordBottomSheet(
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
                         ),
+                        modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
@@ -182,11 +217,9 @@ fun NewPasswordBottomSheet(
                             )
                         }
                     )
-
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = password,
-                        onValueChange = { password = it },
+                        value = password.value,
+                        onValueChange = { password.value = it },
                         label = {
                             Text(stringResource(passwordLabelRes))
                         },
@@ -214,14 +247,18 @@ fun NewPasswordBottomSheet(
                             unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+
                             focusedBorderColor = animatedPasswordBorderColor,
                             unfocusedBorderColor = animatedPasswordBorderColor,
+
                             focusedLeadingIconColor = animatedPasswordBorderColor,
                             unfocusedLeadingIconColor = animatedPasswordBorderColor,
+
                             focusedLabelColor = animatedPasswordBorderColor,
                             unfocusedLabelColor = animatedPasswordBorderColor,
                             cursorColor = animatedPasswordBorderColor
                         ),
+                        modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -230,27 +267,27 @@ fun NewPasswordBottomSheet(
                         }
                     )
 
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = {
-                            Text(stringResource(R.string.notes))
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.password_notes_icon),
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    )
+                        OutlinedTextField(
+                            value = notes,
+                            onValueChange = { notes = it },
+                            label = {
+                                Text(stringResource(R.string.notes))
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.password_notes_icon),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        )
                 }
             }
 
@@ -264,21 +301,26 @@ fun NewPasswordBottomSheet(
                         modifier = Modifier.align(Alignment.BottomEnd),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        GeneratePasswordFab {
-                            password = generatePassword()
+                        DeletePasswordFab {
+                            showDeleteDialog = true
+                        }
+
+                        OpenGeneratePasswordSheetFab {
+                            showGenerateDialog = true
                         }
 
                         SavePasswordFab {
                             if (title.isNotEmpty()) {
-                                credentialViewModel.addCredential(
+                                credentialViewModel.updateCredential(
                                     DecodedCredential(
-                                        title = title.trim(),
-                                        password = password.trim(),
-                                        email = email.trim(),
-                                        notes = notes.trim()
+                                        id = id,
+                                        title = title,
+                                        email = email,
+                                        password = password.value,
+                                        notes = notes
                                     )
                                 )
-                                showNewPasswordBottomSheet.value = false
+                                showEditPasswordBottomSheet.value = false
                             } else {
                                 isWrongTitle = true
                             }
@@ -288,20 +330,65 @@ fun NewPasswordBottomSheet(
             }
         }
     }
-}
 
-private val secureRandom = SecureRandom()
-
-fun randomChar(): Char {
-    val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#\$%^&*()-_=+[]{}"
-    return chars[secureRandom.nextInt(chars.length)]
-}
-
-fun generatePassword(): String {
-    val length = 15
-    var pwd = ""
-    repeat(length) {
-        pwd += randomChar()
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+            text = {
+                Text(stringResource(R.string.sure_delete_entry))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        credentialViewModel.deleteCredential(id)
+                        showDeleteDialog = false
+                        showEditPasswordBottomSheet.value = false
+                    }
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
-    return pwd
+
+    if (showGenerateDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showGenerateDialog = false
+            },
+            text = {
+                Text(stringResource(R.string.are_you_sure_this_action_can_delete_your_current_password))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showGenerateDialog = false
+                        showGeneratePasswordBottomSheet.value = true
+                    }
+                ) {
+                    Text(stringResource(R.string.generate_new_password))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showGenerateDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }

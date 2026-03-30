@@ -102,7 +102,8 @@ fun AppContent(
             composable(Screen.PasswordList.route) {
                 PasswordListScreen(
                     credentialViewModel,
-                    navController
+                    localizationViewModel,
+                    navController,
                 )
             }
             composable(Screen.Settings.route) {

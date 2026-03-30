@@ -1,7 +1,7 @@
-package dev.chsr.stonevault.screen.component
+package dev.chsr.stonevault.screen.component.fab
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -11,16 +11,16 @@ import androidx.compose.ui.res.stringResource
 import dev.chsr.stonevault.R
 
 @Composable
-fun DeletePasswordFab(modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun OpenGeneratePasswordSheetFab(modifier: Modifier = Modifier, onClick: () -> Unit) {
     FloatingActionButton(
         modifier = modifier,
         onClick = onClick,
-        containerColor = MaterialTheme.colorScheme.error,
-        contentColor = MaterialTheme.colorScheme.onError
+        containerColor = MaterialTheme.colorScheme.tertiary,
+        contentColor = MaterialTheme.colorScheme.onTertiary
     ) {
         Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = stringResource(R.string.delete_password_icon)
+            imageVector = Icons.Default.Refresh,
+            contentDescription = stringResource(R.string.generate_password_icon)
         )
     }
 }

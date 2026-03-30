@@ -1,4 +1,4 @@
-package dev.chsr.stonevault.screen.component
+package dev.chsr.stonevault.screen.component.fab
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add

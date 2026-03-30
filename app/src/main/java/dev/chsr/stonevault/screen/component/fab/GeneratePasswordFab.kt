@@ -1,8 +1,7 @@
-package dev.chsr.stonevault.screen.component
+package dev.chsr.stonevault.screen.component.fab
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,12 +15,12 @@ fun GeneratePasswordFab(modifier: Modifier = Modifier, onClick: () -> Unit) {
     FloatingActionButton(
         modifier = modifier,
         onClick = onClick,
-        containerColor = MaterialTheme.colorScheme.tertiary,
-        contentColor = MaterialTheme.colorScheme.onTertiary
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
     ) {
         Icon(
-            imageVector = Icons.Default.Refresh,
-            contentDescription = stringResource(R.string.generate_password_icon)
+            imageVector = Icons.Default.Check,
+            contentDescription = stringResource(R.string.generate_button)
         )
     }
 }

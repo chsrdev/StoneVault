@@ -1,4 +1,4 @@
-package dev.chsr.stonevault.screen.component
+package dev.chsr.stonevault.screen.component.bottomSheet
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +22,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -38,38 +36,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chsr.stonevault.security.PasswordStrength
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.entity.DecodedCredential
-import dev.chsr.stonevault.security.PasswordStrength
+import dev.chsr.stonevault.screen.component.fab.OpenGeneratePasswordSheetFab
+import dev.chsr.stonevault.screen.component.fab.SavePasswordFab
 import dev.chsr.stonevault.security.analyzePassword
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
+import dev.chsr.stonevault.viewmodel.LocalizationViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditPasswordBottomSheet(
-    id: Int,
+fun NewPasswordBottomSheet(
     credentialViewModel: CredentialViewModel,
-    showEditPasswordBottomSheet: MutableState<Boolean>
+    showNewPasswordBottomSheet: MutableState<Boolean>,
+    localizationViewModel: LocalizationViewModel
 ) {
-    if (id == -1) {
-        showEditPasswordBottomSheet.value = false
-        return
-    }
-
-    val decodedCredential = credentialViewModel.getDecodedCredentialById(id)
-    if (decodedCredential == null) {
-        showEditPasswordBottomSheet.value = false
-        return
-    }
-
     val credentials by credentialViewModel.credentials.collectAsState()
 
-    var title by remember { mutableStateOf(decodedCredential.title) }
-    var password by remember { mutableStateOf(decodedCredential.password) }
-    var email by remember { mutableStateOf(decodedCredential.email) }
-    var notes by remember { mutableStateOf(decodedCredential.notes) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    val password = remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
 
     var isWrongTitle by remember { mutableStateOf(false) }
 
@@ -91,10 +80,10 @@ fun EditPasswordBottomSheet(
         decoded?.let { credential.id to it.password }
     }
 
-    val passwordAnalysis = remember(password, allPasswords, id) {
+    val passwordAnalysis = remember(password.value, allPasswords) {
         analyzePassword(
-            password = password,
-            currentId = id,
+            password = password.value,
+            currentId = -1,
             allPasswords = allPasswords
         )
     }
@@ -130,13 +119,22 @@ fun EditPasswordBottomSheet(
         else -> null
     }
 
+    val showGeneratePasswordBottomSheet = remember { mutableStateOf(false) }
+
+    if (showGeneratePasswordBottomSheet.value)
+        GeneratePasswordSheet(
+            password,
+            showGeneratePasswordBottomSheet,
+            localizationViewModel
+        )
+
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
     ModalBottomSheet(
         onDismissRequest = {
-            showEditPasswordBottomSheet.value = false
+            showNewPasswordBottomSheet.value = false
         },
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.background,
@@ -147,17 +145,16 @@ fun EditPasswordBottomSheet(
         ) {
             item {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = title,
                         onValueChange = {
                             title = it
-                            if (it.isNotEmpty()) isWrongTitle = false
+                            isWrongTitle = false
                         },
                         label = {
                             Text(stringResource(R.string.title))
@@ -168,7 +165,6 @@ fun EditPasswordBottomSheet(
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
                         ),
-                        modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.AccountBox,
@@ -179,6 +175,7 @@ fun EditPasswordBottomSheet(
                     )
 
                     OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = email,
                         onValueChange = { email = it },
                         label = {
@@ -190,7 +187,6 @@ fun EditPasswordBottomSheet(
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
                         ),
-                        modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
@@ -199,9 +195,11 @@ fun EditPasswordBottomSheet(
                             )
                         }
                     )
+
                     OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        value = password.value,
+                        onValueChange = { password.value = it },
                         label = {
                             Text(stringResource(passwordLabelRes))
                         },
@@ -215,13 +213,14 @@ fun EditPasswordBottomSheet(
                                     )
                                 }
 
-                                passwordAnalysis.recommendations.take(3).forEach { recommendationRes ->
-                                    Text(
-                                        text = stringResource(recommendationRes),
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                passwordAnalysis.recommendations.take(3)
+                                    .forEach { recommendationRes ->
+                                        Text(
+                                            text = stringResource(recommendationRes),
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
@@ -229,18 +228,14 @@ fun EditPasswordBottomSheet(
                             unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-
                             focusedBorderColor = animatedPasswordBorderColor,
                             unfocusedBorderColor = animatedPasswordBorderColor,
-
                             focusedLeadingIconColor = animatedPasswordBorderColor,
                             unfocusedLeadingIconColor = animatedPasswordBorderColor,
-
                             focusedLabelColor = animatedPasswordBorderColor,
                             unfocusedLabelColor = animatedPasswordBorderColor,
                             cursorColor = animatedPasswordBorderColor
                         ),
-                        modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -249,27 +244,27 @@ fun EditPasswordBottomSheet(
                         }
                     )
 
-                        OutlinedTextField(
-                            value = notes,
-                            onValueChange = { notes = it },
-                            label = {
-                                Text(stringResource(R.string.notes))
-                            },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = stringResource(R.string.password_notes_icon),
-                                    tint = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        )
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = {
+                            Text(stringResource(R.string.notes))
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.password_notes_icon),
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    )
                 }
             }
 
@@ -283,22 +278,21 @@ fun EditPasswordBottomSheet(
                         modifier = Modifier.align(Alignment.BottomEnd),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        DeletePasswordFab {
-                            showDeleteDialog = true
+                        OpenGeneratePasswordSheetFab {
+                            showGeneratePasswordBottomSheet.value = true
                         }
 
                         SavePasswordFab {
                             if (title.isNotEmpty()) {
-                                credentialViewModel.updateCredential(
+                                credentialViewModel.addCredential(
                                     DecodedCredential(
-                                        id = id,
-                                        title = title,
-                                        email = email,
-                                        password = password,
-                                        notes = notes
+                                        title = title.trim(),
+                                        password = password.value.trim(),
+                                        email = email.trim(),
+                                        notes = notes.trim()
                                     )
                                 )
-                                showEditPasswordBottomSheet.value = false
+                                showNewPasswordBottomSheet.value = false
                             } else {
                                 isWrongTitle = true
                             }
@@ -308,35 +302,5 @@ fun EditPasswordBottomSheet(
             }
         }
     }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showDeleteDialog = false
-            },
-            text = {
-                Text(stringResource(R.string.sure_delete_entry))
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        credentialViewModel.deleteCredential(id)
-                        showDeleteDialog = false
-                        showEditPasswordBottomSheet.value = false
-                    }
-                ) {
-                    Text(stringResource(R.string.delete))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                    }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
 }
+
