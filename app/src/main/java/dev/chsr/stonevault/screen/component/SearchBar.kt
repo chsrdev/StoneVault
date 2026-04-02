@@ -17,7 +17,7 @@ import dev.chsr.stonevault.R
 import dev.chsr.stonevault.screen.PasswordListEntry
 
 @Composable
-fun SearchBar(modifier: Modifier, entries: List<PasswordListEntry>, filteredEntries: MutableState<List<PasswordListEntry>>) {
+fun SearchBar(modifier: Modifier = Modifier, entries: List<PasswordListEntry>, filteredEntries: MutableState<List<PasswordListEntry>>) {
     var text by remember { mutableStateOf("") }
 
     OutlinedTextField(

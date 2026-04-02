@@ -1,5 +1,6 @@
 package dev.chsr.stonevault.screen
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,11 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import dev.chsr.stonevault.screen.component.bottomSheet.EditPasswordBottomSheet
 import dev.chsr.stonevault.screen.component.bottomSheet.NewPasswordBottomSheet
 import dev.chsr.stonevault.screen.component.fab.NewPasswordFab
 import dev.chsr.stonevault.screen.component.PasswordCard
+import dev.chsr.stonevault.screen.component.SearchBar
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
 import dev.chsr.stonevault.viewmodel.LocalizationViewModel
 
@@ -25,7 +28,11 @@ data class PasswordListEntry(
 )
 
 @Composable
-fun PasswordListScreen(credentialViewModel: CredentialViewModel, localizationViewModel: LocalizationViewModel, navController: NavController) {
+fun PasswordListScreen(
+    credentialViewModel: CredentialViewModel,
+    localizationViewModel: LocalizationViewModel,
+    navController: NavController
+) {
     credentialViewModel.loadCredentials()
     val credentials by credentialViewModel.credentials.collectAsState()
     val entries = mutableStateOf(credentials.map {
@@ -34,6 +41,7 @@ fun PasswordListScreen(credentialViewModel: CredentialViewModel, localizationVie
             credentialViewModel.getDecodedCredentialById(it.id)!!.title
         )
     })
+    val filteredEntries = mutableStateOf(entries.value)
 
 
     val showNewPasswordBottomSheet = remember { mutableStateOf(false) }
@@ -43,9 +51,21 @@ fun PasswordListScreen(credentialViewModel: CredentialViewModel, localizationVie
     Scaffold(
         floatingActionButton = { NewPasswordFab(showNewPasswordBottomSheet) }
     ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+        ) {
+            item {
+                SearchBar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    entries = entries.value,
+                    filteredEntries = filteredEntries
+                )
+            }
 
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(entries.value) { entry ->
+            items(filteredEntries.value) { entry ->
                 PasswordCard(entry) {
                     editPasswordId = entry.id
                     showEditPasswordBottomSheet.value = true
