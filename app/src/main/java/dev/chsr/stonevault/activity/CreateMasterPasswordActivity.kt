@@ -47,6 +47,7 @@ import dev.chsr.stonevault.utils.AES
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.activity.component.MasterPasswordTextField
 import dev.chsr.stonevault.screen.updateLocale
+import dev.chsr.stonevault.security.SessionManager
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.utils.Languages
 import dev.chsr.stonevault.utils.PreferencesManager
@@ -157,14 +158,14 @@ class CreateMasterPasswordActivity : AppCompatActivity() {
                                             masterPasswordValue.value.isNotEmpty()
                                         ) {
                                             val key = saveFirstEnter(masterPasswordValue.value)
+                                            SessionManager.setKey(key)
                                             startActivity(
                                                 Intent(
                                                     applicationContext,
                                                     MainActivity::class.java
-                                                ).apply {
-                                                    putExtra("SECRET_KEY", key.encoded)
-                                                }
+                                                )
                                             )
+                                            finish()
                                         } else {
                                             haptic.performHapticFeedback(HapticFeedbackType.Reject)
                                             isWrongPasswordInput.value = true

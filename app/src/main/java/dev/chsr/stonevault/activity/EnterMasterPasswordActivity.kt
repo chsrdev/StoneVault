@@ -52,6 +52,7 @@ import dev.chsr.stonevault.utils.AES
 import dev.chsr.stonevault.R
 import dev.chsr.stonevault.activity.component.MasterPasswordTextField
 import dev.chsr.stonevault.screen.updateLocale
+import dev.chsr.stonevault.security.SessionManager
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
 import dev.chsr.stonevault.utils.PreferencesManager
 import dev.chsr.stonevault.viewmodel.AppViewModel
@@ -113,13 +114,12 @@ class EnterMasterPasswordActivity : AppCompatActivity() {
                                     .align(Alignment.CenterHorizontally),
                                 onClick = {
                                     if (verifyMasterPassword(masterPasswordValue.value)) {
+                                        SessionManager.setKey(secretKey!!)
                                         startActivity(
                                             Intent(
                                                 applicationContext,
                                                 MainActivity::class.java
-                                            ).apply {
-                                                putExtra("SECRET_KEY", secretKey!!.encoded)
-                                            }
+                                            )
                                         )
                                         finish()
                                     } else {

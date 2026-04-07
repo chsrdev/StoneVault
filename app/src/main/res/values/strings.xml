@@ -69,4 +69,6 @@
     <string name="generate_button">Generate</string>
     <string name="are_you_sure_this_action_can_delete_your_current_password">Are you sure? This action can delete your current password.</string>
     <string name="generate_new_password">Generate new password</string>
+    <string name="change_master_password">Change master password</string>
+    <string name="are_you_sure_you_want_to_change_your_master_password_your_current_passwords_will_remain_the_same">Are you sure you want to change your master password? Your current passwords will remain the same.</string>
 </resources>

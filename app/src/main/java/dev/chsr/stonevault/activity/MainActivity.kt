@@ -1,6 +1,9 @@
 package dev.chsr.stonevault.activity
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -27,7 +30,9 @@ import dev.chsr.stonevault.database.AppDatabase
 import dev.chsr.stonevault.screen.PasswordListScreen
 import dev.chsr.stonevault.screen.Screen
 import dev.chsr.stonevault.screen.SettingsScreen
+import dev.chsr.stonevault.security.SessionManager
 import dev.chsr.stonevault.ui.theme.StoneVaultTheme
+import dev.chsr.stonevault.viewmodel.AppViewModel
 import dev.chsr.stonevault.viewmodel.CredentialViewModel
 import dev.chsr.stonevault.viewmodel.LocalizationViewModel
 import dev.chsr.stonevault.viewmodel.theme.ThemeMode
@@ -36,6 +41,37 @@ import javax.crypto.spec.SecretKeySpec
 
 
 class MainActivity : AppCompatActivity() {
+    private val sessionHandler = Handler(Looper.getMainLooper())
+
+    private val clearSessionRunnable = Runnable {
+        SessionManager.clear()
+        startActivity(
+            Intent(this, EnterMasterPasswordActivity::class.java)
+        )
+        finish()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        sessionHandler.postDelayed(
+            clearSessionRunnable,
+            30_000
+        )
+    }
+
+    override fun onStart() {
+        super.onStart()
+        sessionHandler.removeCallbacks(clearSessionRunnable)
+        if (!SessionManager.isInitialized()) {
+            startActivity(
+                Intent(this, EnterMasterPasswordActivity::class.java)
+            )
+            finish()
+            return
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -45,17 +81,24 @@ class MainActivity : AppCompatActivity() {
             AppDatabase::class.java, "database"
         ).build()
 
-        val secretKeyBytes = intent.getByteArrayExtra("SECRET_KEY")
-        val secretKey = SecretKeySpec(secretKeyBytes, "AES")
+//        val secretKeyBytes = intent.getByteArrayExtra("SECRET_KEY")
+//        if (secretKeyBytes != null) {
+//            SessionManager.setKey(
+//                SecretKeySpec(secretKeyBytes, "AES")
+//            )
+//        }
 
         val credentialViewModel: CredentialViewModel by viewModels {
-            CredentialViewModel.CredentialViewModelFactory(db, secretKey)
+            CredentialViewModel.CredentialViewModelFactory(db)
         }
         val localizationViewModel: LocalizationViewModel by viewModels {
             LocalizationViewModel.LocalizationViewModelFactory(application)
         }
         val themeViewModel: ThemeViewModel by viewModels {
             ThemeViewModel.ThemeViewModelFactory(application)
+        }
+        val appViewModel: AppViewModel by viewModels {
+            AppViewModel.AppViewModelFactory(application)
         }
 
         setContent {
@@ -70,7 +113,8 @@ class MainActivity : AppCompatActivity() {
                     AppContent(
                         credentialViewModel = credentialViewModel,
                         localizationViewModel = localizationViewModel,
-                        themeViewModel = themeViewModel
+                        themeViewModel = themeViewModel,
+                        appViewModel = appViewModel
                     )
                 }
             }
@@ -82,7 +126,8 @@ class MainActivity : AppCompatActivity() {
 fun AppContent(
     credentialViewModel: CredentialViewModel,
     localizationViewModel: LocalizationViewModel,
-    themeViewModel: ThemeViewModel
+    themeViewModel: ThemeViewModel,
+    appViewModel: AppViewModel
 ) {
     val navController = rememberNavController()
 
@@ -107,7 +152,7 @@ fun AppContent(
                 )
             }
             composable(Screen.Settings.route) {
-                SettingsScreen(localizationViewModel, themeViewModel)
+                SettingsScreen(localizationViewModel, themeViewModel, appViewModel, credentialViewModel)
             }
         }
     }
