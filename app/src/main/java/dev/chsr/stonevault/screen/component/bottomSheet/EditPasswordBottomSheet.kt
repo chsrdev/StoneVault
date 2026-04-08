@@ -73,7 +73,7 @@ fun EditPasswordBottomSheet(
     val credentials by credentialViewModel.credentials.collectAsState()
 
     var title by remember { mutableStateOf(decodedCredential.title) }
-    val password = remember { mutableStateOf("") }
+    val password = remember { mutableStateOf(decodedCredential.password) }
     var email by remember { mutableStateOf(decodedCredential.email) }
     var notes by remember { mutableStateOf(decodedCredential.notes) }
 
