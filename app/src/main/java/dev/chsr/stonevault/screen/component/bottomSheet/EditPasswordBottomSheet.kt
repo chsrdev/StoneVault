@@ -306,7 +306,8 @@ fun EditPasswordBottomSheet(
                         }
 
                         OpenGeneratePasswordSheetFab {
-                            showGenerateDialog = true
+                            if (password.value.isBlank())
+                                showGeneratePasswordBottomSheet.value = true
                         }
 
                         SavePasswordFab {

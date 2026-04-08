@@ -3,21 +3,29 @@ package dev.chsr.stonevault.activity.component
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import dev.chsr.stonevault.R
 import kotlinx.coroutines.launch
 
@@ -37,15 +45,18 @@ fun MasterPasswordTextField(
     )
     val scope = rememberCoroutineScope()
     val offsetX = remember { Animatable(0f) }
+    var isVisible by remember { mutableStateOf(false) }
 
-    if (isWrongPasswordInput.value) {
-        scope.launch {
+    LaunchedEffect(isWrongPasswordInput.value) {
+        if (isWrongPasswordInput.value) {
             offsetX.stop()
-            offsetX.snapTo(0F)
+            offsetX.snapTo(0f)
+
             repeat(2) {
                 offsetX.animateTo(-8f, tween(60))
                 offsetX.animateTo(8f, tween(60))
             }
+
             offsetX.animateTo(0f, tween(80))
             isWrongPasswordInput.value = false
         }
@@ -75,6 +86,17 @@ fun MasterPasswordTextField(
             unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
             focusedPlaceholderColor = MaterialTheme.colorScheme.onBackground,
             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onBackground
-        )
+        ),
+        visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            Icon(
+                imageVector = if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.clickable {
+                    isVisible = !isVisible
+                }
+            )
+        }
     )
 }
