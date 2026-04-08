@@ -64,4 +64,6 @@
     <string name="generate_button">Сгенерировать</string>
     <string name="are_you_sure_this_action_can_delete_your_current_password">Вы уверены? Это действие может удалить ваш текущий пароль.</string>
     <string name="generate_new_password">Сгенерировать новый пароль</string>
+    <string name="change_master_password">Изменить мастер-пароль</string>
+    <string name="are_you_sure_you_want_to_change_your_master_password_your_current_passwords_will_remain_the_same">Вы уверены, что хотите изменить свой мастер-пароль? Все ваши текущие пароли сохранятся.</string>
 </resources>
